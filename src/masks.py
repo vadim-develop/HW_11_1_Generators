@@ -1,7 +1,7 @@
 from typing import Union
 
 
-def get_mask_card_number(user_card: Union[str, int]) -> Union[str]:
+def get_mask_card_number(user_card: Union[str, int]) -> str:
     """Функция, которая принимает на вход номер карты в виде числа и возвращает маску номера по правилу
     XXXX XX** **** XXXX"""
     # Преобразуем в строку и удаляем возможные пробелы
@@ -19,7 +19,7 @@ def get_mask_card_number(user_card: Union[str, int]) -> Union[str]:
     return masked_card
 
 
-def get_mask_account(user_account: Union[int, str]) -> Union[str]:
+def get_mask_account(user_account: Union[int, str]) -> str:
     """Функция, которая принимает на вход номер счета в виде числа и возвращает маску номера по правилу **XXXX"""
     # Преобразуем в строку и удаляем возможные пробелы
     account_str = str(user_account).strip()
@@ -30,7 +30,7 @@ def get_mask_account(user_account: Union[int, str]) -> Union[str]:
 
     # Проверяем длину номера счета (должно быть 20 цифр)
     if len(account_str) != 20:
-        return f"Ошибка: Номер счета должен содержать 20 цифр (получено {len(account_str)}."
+        return f"Ошибка: Номер счета должен содержать 20 цифр (получено {len(account_str)})."
 
     # Форматируем номера счета по маске **XXXX
     masked_account = f"**{account_str[-4:]}"
