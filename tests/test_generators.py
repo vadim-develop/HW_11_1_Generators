@@ -1,6 +1,6 @@
 import pytest
 
-from src.generators import filter_by_currency, transaction_descriptions, card_number_generator
+from src.generators import card_number_generator, filter_by_currency, transaction_descriptions
 
 # Тесты для filter_by_currency
 
@@ -8,31 +8,17 @@ from src.generators import filter_by_currency, transaction_descriptions, card_nu
 test_data = [
     {  # 1. Транзакция в USD
         "id": 1,
-        "operationAmount": {
-            "amount": "100",
-            "currency": {"code": "USD", "name": "Доллар"}
-        }
+        "operationAmount": {"amount": "100", "currency": {"code": "USD", "name": "Доллар"}},
     },
     {  # 2. Транзакция в EUR
         "id": 2,
-        "operationAmount": {
-            "amount": "200",
-            "currency": {"code": "EUR", "name": "Евро"}
-        }
+        "operationAmount": {"amount": "200", "currency": {"code": "EUR", "name": "Евро"}},
     },
     {  # 3. Еще одна транзакция в USD
         "id": 3,
-        "operationAmount": {
-            "amount": "300",
-            "currency": {"code": "USD", "name": "Доллар"}
-        }
+        "operationAmount": {"amount": "300", "currency": {"code": "USD", "name": "Доллар"}},
     },
-    {  # 4. Транзакция без указания валюты (неправильная)
-        "id": 4,
-        "operationAmount": {
-            "amount": "400"
-        }
-    }
+    {"id": 4, "operationAmount": {"amount": "400"}},  # 4. Транзакция без указания валюты (неправильная)
 ]
 
 
@@ -93,7 +79,7 @@ def test_returns_correct_descriptions():
     test_transactions = [
         {"description": "Перевод организации"},
         {"description": "Перевод со счета на счет"},
-        {"description": "Оплата услуг"}
+        {"description": "Оплата услуг"},
     ]
 
     # Используем генератор
@@ -115,7 +101,7 @@ def test_skips_transactions_without_description():
         {"description": "Первый перевод"},
         {"no_description": "Нет описания"},  # Нет поля description
         {"description": "Второй перевод"},
-        {"amount": 100}  # Тоже нет описания
+        {"amount": 100},  # Тоже нет описания
     ]
 
     gen = transaction_descriptions(test_transactions)
@@ -156,7 +142,7 @@ def test_mixed_transactions():
         {"amount": 1000},  # Без описания
         {"description": "Аренда"},
         {"date": "2023-01-01"},  # Без описания
-        {"description": "Покупка продуктов"}
+        {"description": "Покупка продуктов"},
     ]
 
     gen = transaction_descriptions(test_transactions)
