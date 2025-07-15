@@ -1,6 +1,6 @@
 import pytest
 
-from src.generators import filter_by_currency, transaction_descriptions
+from src.generators import filter_by_currency, transaction_descriptions, card_number_generator
 
 # Тесты для filter_by_currency
 
@@ -168,3 +168,44 @@ def test_mixed_transactions():
 
     with pytest.raises(StopIteration):
         next(gen)
+
+
+# тесты для проверки card_number_generator
+def test_small_range():
+    """Тест небольшого диапазона"""
+    generator = card_number_generator(1, 3)
+    assert next(generator) == "0000 0000 0000 0001"
+    assert next(generator) == "0000 0000 0000 0002"
+    assert next(generator) == "0000 0000 0000 0003"
+
+    with pytest.raises(StopIteration):
+        next(generator)
+
+
+def test_large_numbers():
+    """Тест больших номеров карт"""
+    generator = card_number_generator(9999999999999995, 9999999999999999)
+    assert next(generator) == "9999 9999 9999 9995"
+    assert next(generator) == "9999 9999 9999 9996"
+    assert next(generator) == "9999 9999 9999 9997"
+    assert next(generator) == "9999 9999 9999 9998"
+    assert next(generator) == "9999 9999 9999 9999"
+
+    with pytest.raises(StopIteration):
+        next(generator)
+
+
+def test_single_number():
+    """Тест одного номера карты"""
+    generator = card_number_generator(1234567890123456, 1234567890123456)
+    assert next(generator) == "1234 5678 9012 3456"
+
+    with pytest.raises(StopIteration):
+        next(generator)
+
+
+def test_invalid_range():
+    """Тест неверного диапазона (start > end)"""
+    generator = card_number_generator(5, 1)
+    with pytest.raises(StopIteration):
+        next(generator)
