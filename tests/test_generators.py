@@ -72,6 +72,7 @@ def test_empty_input():
     result = list(filter_by_currency([], "USD"))
     assert len(result) == 0
 
+
 # Тесты для функции transaction_descriptions
 def test_returns_correct_descriptions():
     """Тест 1: Проверяем, что функция возвращает правильные описания"""
