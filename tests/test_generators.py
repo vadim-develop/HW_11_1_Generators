@@ -2,7 +2,7 @@ import pytest
 
 from src.generators import card_number_generator, filter_by_currency, transaction_descriptions
 
-# Тесты для filter_by_currency
+# Тесты для функции filter_by_currency
 
 # Тестовые данные - 4 простые транзакции
 test_data = [
@@ -72,7 +72,7 @@ def test_empty_input():
     result = list(filter_by_currency([], "USD"))
     assert len(result) == 0
 
-
+# Тесты для функции transaction_descriptions
 def test_returns_correct_descriptions():
     """Тест 1: Проверяем, что функция возвращает правильные описания"""
     # Подготовка тестовых данных
@@ -156,7 +156,7 @@ def test_mixed_transactions():
         next(gen)
 
 
-# тесты для проверки card_number_generator
+# тесты для фунции card_number_generator
 def test_small_range():
     """Тест небольшого диапазона"""
     generator = card_number_generator(1, 3)
