@@ -1,8 +1,24 @@
+from typing import Dict, List
+
 import pytest
 
 from src.generators import card_number_generator, filter_by_currency, transaction_descriptions
 
 # Тесты для функции filter_by_currency
+
+
+# Фикстура с тестовыми транзакциями
+@pytest.fixture
+def sample_transactions() -> List[Dict]:
+    return [
+        {"id": 1, "operationAmount": {"amount": "100.00", "currency": {"code": "USD", "name": "Доллар"}}},
+        {"id": 2, "operationAmount": {"amount": "200.00", "currency": {"code": "EUR", "name": "Евро"}}},
+        {"id": 3, "operationAmount": {"amount": "300.00", "currency": {"code": "USD", "name": "Доллар"}}},
+        {"id": 4, "operationAmount": {"amount": "400.00", "currency": {"code": "GBP", "name": "Фунт"}}},
+        {"id": 5, "operationAmount": {}},  # Некорректная транзакция
+        {"id": 6},  # Транзакция без operationAmount
+    ]
+
 
 # Тестовые данные - 4 простые транзакции
 test_data = [
@@ -74,19 +90,45 @@ def test_empty_input():
 
 
 # Тесты для функции transaction_descriptions
-def test_returns_correct_descriptions():
-    """Тест 1: Проверяем, что функция возвращает правильные описания"""
-    # Подготовка тестовых данных
-    test_transactions = [
-        {"description": "Перевод организации"},
-        {"description": "Перевод со счета на счет"},
-        {"description": "Оплата услуг"},
+
+
+# Фикстура с тестовыми данными
+@pytest.fixture
+def sample_transactions() -> List[Dict]:
+    return [
+        {"id": 1, "description": "Перевод организации"},
+        {"id": 2, "description": "Перевод со счета на счет"},
+        {"id": 3},  # Транзакция без описания
+        {"id": 4, "description": "Оплата услуг"},
+        {"id": 5, "other_field": "Нет описания"},  # Тоже без описания
     ]
 
-    # Используем генератор
-    gen = transaction_descriptions(test_transactions)
 
-    # Проверяем каждое описание по очереди
+# Параметризованный тест для разных случаев
+@pytest.mark.parametrize(
+    "input_data, expected_descriptions",
+    [
+        # Тест 1: Обычные транзакции с описаниями
+        ([{"description": "Зарплата"}, {"description": "Аренда"}], ["Зарплата", "Аренда"]),
+        # Тест 2: Транзакции без описаний
+        ([{"amount": 100}, {"date": "2023-01-01"}], []),
+        # Тест 3: Пустой список
+        ([], []),
+        # Тест 4: Смешанные транзакции
+        ([{"description": "Покупка"}, {"amount": 200}, {"description": "Продажа"}], ["Покупка", "Продажа"]),
+    ],
+)
+def test_transaction_descriptions_parametrized(input_data, expected_descriptions):
+    """Параметризованный тест для разных случаев ввода"""
+    result = list(transaction_descriptions(input_data))
+    assert result == expected_descriptions
+
+
+def test_with_fixture(sample_transactions):
+    """Тест с использованием фикстуры"""
+    gen = transaction_descriptions(sample_transactions)
+
+    # Проверяем порядок и содержание описаний
     assert next(gen) == "Перевод организации"
     assert next(gen) == "Перевод со счета на счет"
     assert next(gen) == "Оплата услуг"
@@ -96,103 +138,99 @@ def test_returns_correct_descriptions():
         next(gen)
 
 
-def test_skips_transactions_without_description():
-    """Тест 2: Проверяем, что пропускаются транзакции без описания"""
-    test_transactions = [
-        {"description": "Первый перевод"},
-        {"no_description": "Нет описания"},  # Нет поля description
-        {"description": "Второй перевод"},
-        {"amount": 100},  # Тоже нет описания
-    ]
-
-    gen = transaction_descriptions(test_transactions)
-
-    # Должны получить только транзакции с описанием
-    assert next(gen) == "Первый перевод"
-    assert next(gen) == "Второй перевод"
-
-    # Больше описаний нет
-    with pytest.raises(StopIteration):
-        next(gen)
-
-
-def test_single_transaction():
-    """Тест 3: Проверяем работу с одной транзакцией"""
-    test_transactions = [{"description": "Одиночный перевод"}]
-
-    gen = transaction_descriptions(test_transactions)
-    assert next(gen) == "Одиночный перевод"
-
-    with pytest.raises(StopIteration):
-        next(gen)
-
-
 def test_empty_list():
-    """Тест 4: Проверяем работу с пустым списком транзакций"""
+    """Тест с пустым списком транзакций"""
     gen = transaction_descriptions([])
-
-    # Генератор должен сразу завершиться
-    with pytest.raises(StopIteration):
-        next(gen)
-
-
-def test_mixed_transactions():
-    """Тест 5: Проверяем работу со смешанными данными"""
-    test_transactions = [
-        {"description": "Зарплата"},
-        {"amount": 1000},  # Без описания
-        {"description": "Аренда"},
-        {"date": "2023-01-01"},  # Без описания
-        {"description": "Покупка продуктов"},
-    ]
-
-    gen = transaction_descriptions(test_transactions)
-
-    # Должны получить только транзакции с описанием
-    assert next(gen) == "Зарплата"
-    assert next(gen) == "Аренда"
-    assert next(gen) == "Покупка продуктов"
-
     with pytest.raises(StopIteration):
         next(gen)
 
 
 # тесты для фунции card_number_generator
-def test_small_range():
-    """Тест небольшого диапазона"""
-    generator = card_number_generator(1, 3)
-    assert next(generator) == "0000 0000 0000 0001"
-    assert next(generator) == "0000 0000 0000 0002"
-    assert next(generator) == "0000 0000 0000 0003"
 
+
+# Фикстура с тестовыми диапазонами
+@pytest.fixture(
+    params=[
+        (1, 5),  # Маленький диапазон
+        (9995, 9999),  # Близко к границе
+        (1, 1),  # Один номер
+        (9999999999999995, 9999999999999999),  # Максимальные значения
+    ]
+)
+def number_ranges(request):
+    """Фикстура возвращает разные диапазоны для тестирования"""
+    return request.param
+
+
+# Параметризованные тесты для проверки форматирования
+@pytest.mark.parametrize(
+    "number, expected",
+    [
+        (1, "0000 0000 0000 0001"),
+        (1234567890123456, "1234 5678 9012 3456"),
+        (9999999999999999, "9999 9999 9999 9999"),
+        (10000, "0000 0000 0001 0000"),  # Проверка чисел больше 9999
+    ],
+)
+def test_card_number_formatting(number, expected):
+    """Тест правильного форматирования номеров карт"""
+    gen = card_number_generator(number, number)
+    assert next(gen) == expected
+
+
+def test_generator_with_fixture(number_ranges):
+    """Тест генератора с использованием фикстуры"""
+    start, end = number_ranges
+    gen = card_number_generator(start, end)
+
+    # Проверяем первый элемент
+    first_number = next(gen)
+    assert (
+        first_number
+        == f"{start:016d}"[:4]
+        + " "
+        + f"{start:016d}"[4:8]
+        + " "
+        + f"{start:016d}"[8:12]
+        + " "
+        + f"{start:016d}"[12:16]
+    )
+
+    # Проверяем количество элементов
+    count = end - start + 1
+    if count > 1:
+        # Пропускаем промежуточные элементы
+        for _ in range(count - 2):
+            next(gen)
+        # Проверяем последний элемент
+        last_number = next(gen)
+        assert (
+            last_number
+            == f"{end:016d}"[:4] + " " + f"{end:016d}"[4:8] + " " + f"{end:016d}"[8:12] + " " + f"{end:016d}"[12:16]
+        )
+
+    # Проверяем завершение генератора
     with pytest.raises(StopIteration):
-        next(generator)
-
-
-def test_large_numbers():
-    """Тест больших номеров карт"""
-    generator = card_number_generator(9999999999999995, 9999999999999999)
-    assert next(generator) == "9999 9999 9999 9995"
-    assert next(generator) == "9999 9999 9999 9996"
-    assert next(generator) == "9999 9999 9999 9997"
-    assert next(generator) == "9999 9999 9999 9998"
-    assert next(generator) == "9999 9999 9999 9999"
-
-    with pytest.raises(StopIteration):
-        next(generator)
-
-
-def test_single_number():
-    """Тест одного номера карты"""
-    generator = card_number_generator(1234567890123456, 1234567890123456)
-    assert next(generator) == "1234 5678 9012 3456"
-
-    with pytest.raises(StopIteration):
-        next(generator)
+        next(gen)
 
 
 def test_invalid_range():
-    """Тест неверного диапазона (start > end)"""
-    generator = card_number_generator(5, 1)
+    """Тест на некорректный диапазон (start > end)"""
+    gen = card_number_generator(10, 5)
     with pytest.raises(StopIteration):
-        next(generator)
+        next(gen)
+
+
+def test_edge_cases():
+    """Тест граничных случаев"""
+    # Минимальное значение
+    gen = card_number_generator(1, 1)
+    assert next(gen) == "0000 0000 0000 0001"
+
+    # Максимальное значение
+    gen = card_number_generator(9999999999999999, 9999999999999999)
+    assert next(gen) == "9999 9999 9999 9999"
+
+    # Диапазон из одного элемента
+    gen = card_number_generator(1234567890123456, 1234567890123456)
+    assert next(gen) == "1234 5678 9012 3456"
